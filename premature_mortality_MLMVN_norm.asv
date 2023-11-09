@@ -1,0 +1,37 @@
+%read in dataset
+P = readmatrix('premature_mortality_clean.csv');
+
+%remove columns with text
+p = P;
+p(:,1) = []; %rows
+p(1,:) = [];%cols
+
+%normalize to 3/4 of the unit circle
+p = p-min(min(p))/max(max(p))-min(min(p)).*(3*pi/2)+pi/4;
+
+% %normalize to 3/4 of the unit circle
+% pmin = min(min(p));
+% pmax = max(max(p));
+% p = p-pmin/pmax-pmin.*((3*pi)/2)+pi/4;
+
+%impute nulls
+p = knnimpute(p);
+
+%train/test split
+% Partition with 30% data as testing 
+hpartition = cvpartition(size(p,1),'Holdout',0.25); 
+% Extract indices for training and test 
+trainId = training(hpartition);
+testId = test(hpartition);
+% Use Indices to parition the matrix  
+trainData = p(trainId,:);
+testData = p(testId,:);
+
+%Training the Network
+[hidneur_weights1, hidneur_weights2, outneur_w, iterations] = Net_learn(trainData, [64 128], 0.010);
+pause(3)
+
+% Testing of the trained network
+[ang_RMSE, actual_output, desired_output] = Net_test(testData, hidneur_weights1, hidneur_weights2, outneur_w);
+% ang_RMSE - resulting angular RMSE
+ 
